@@ -11,4 +11,4 @@ In addition to the standard parameters, the this library provides the ability to
 
 ### An Example
 
-A working example of this code can be found [here](../../wuMQTTAgregate) in wuMQTTAgregate which is an example of how to publish dispersed sensor readings using a cache and MQTT
+A working example of this code can be found [here](https://github.com/danward79/wuMQTTAgregate) in wuMQTTAgregate which is an example of how to publish dispersed sensor readings using a cache and MQTT
