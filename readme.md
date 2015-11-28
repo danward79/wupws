@@ -8,3 +8,7 @@ In addition to the standard parameters, the this library provides the ability to
   - tempc - This will convert a Celcius parameter to Fahrenheit for tempf
   - indoortempc - This will convert a Celcius parameter to Fahrenheit for indoortempc
   - barohpa - This will convert an atomospheric pressure parameter to inHg for baromin
+
+### An Example
+
+A working example of this code can be found [here](github.com/danward79/wuMQTTAgregate) in wuMQTTAgregate which is an example of how to publish dispersed sensor readings using a cache and MQTT

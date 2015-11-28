@@ -3,10 +3,12 @@ package wupws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -25,6 +27,8 @@ type Station struct {
 
 	lastUpdateWeather time.Time
 	lastPush          time.Time
+
+	mutex sync.RWMutex
 }
 
 //Allowed weather and pollution reporting parameters
@@ -56,11 +60,16 @@ func (s *Station) String() string {
 
 //New generates a new pws object
 func New(stnID string, stnPassword string, software string, calculateDewpoint bool) *Station {
-	return &Station{id: stnID, password: stnPassword, softwaretype: software, calculateDewpoint: calculateDewpoint}
+	s := &Station{id: stnID, password: stnPassword, softwaretype: software, calculateDewpoint: calculateDewpoint}
+	log.Println(s)
+	return s
 }
 
 //UpdateWeather update weather parameters for next PushUpdate
 func (s *Station) UpdateWeather(parameters map[string]string) error {
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
 	if parametersOK(parameters) {
 
@@ -92,7 +101,9 @@ func (s *Station) PushUpdate(date string) error {
 		return err
 	}
 
-	_, err = upload(s.buildURL(s.weatherParameters, d))
+	url := s.buildURL(s.weatherParameters, d)
+
+	_, err = upload(url)
 	if err != nil {
 		return err
 	}
@@ -104,6 +115,8 @@ func (s *Station) PushUpdate(date string) error {
 
 //buildURL generates an update URL in accordance with the API, from parameters passed in.
 func (s *Station) buildURL(parameters map[string]string, date string) string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
 	u := url.Values{}
 
@@ -145,7 +158,6 @@ func (s *Station) buildURL(parameters map[string]string, date string) string {
 	u.Set("action", "updateraw")
 
 	completeURL := fmt.Sprintf("%s%s", baseURL, u.Encode())
-	fmt.Println(completeURL)
 	return completeURL
 }
 
@@ -166,10 +178,14 @@ func handleDate(date string) (string, error) {
 
 //upload data using a formatted url that complies to the WU API
 func upload(urlFinal string) (string, error) {
+
 	resp, err := http.Get(urlFinal)
 	if err != nil {
-		return resp.Status, err
+		fmt.Println("upload err:  ", err)
+		return "", err
 	}
+	defer resp.Body.Close()
+
 	return resp.Status, nil
 }
 
